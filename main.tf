@@ -1,5 +1,12 @@
 locals {
-  name_prefix = "" # provide your name prefix
+  name_prefix = "rger" # provide your name prefix
+}
+
+module "aws_vpc" {
+  source             = "git::https://github.com/KeenGWatanabe/terraform-vpc.git"
+  aws_region         = "us-east-1"
+  vpc_cidr_block     = data.aws_vpc.selected.cidr_block
+  public_subnet_cidr = data.aws_subnet.public.cidr_block
 }
 
 module "web_app" {
