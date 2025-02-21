@@ -1,34 +1,39 @@
 locals {
   name_prefix = "rger" # provide your name prefix
 }
-
 module "aws_vpc" {
-  source             = "git::https://github.com/KeenGWatanabe/terraform-vpc.git"
+  #https method
+  source             = "git::https://github.com/KeenGWatanabe/terraform-vpc"
   aws_region         = "us-east-1"
-  vpc_cidr_block     = data.aws_vpc.selected.cidr_block
-  public_subnet_cidr = data.aws_subnet.public.cidr_block
+  vpc_cidr_block     = "10.0.0.0/16"
+  public_subnet_cidr = ["10.0.1.0/24", 
+"10.0.2.0/24",
+"10.0.3.0/24",
+"10.0.4.0/24" ]
+}
+# outputs.tf in the module
+output "vpc_id" {
+  value = module.aws_vpc.vpc.id
+}
+
+output "public_subnet_ids" {
+  value = module.aws_vpc.public_subnet_ids
 }
 
 module "web_app" {
-  source = "./modules/web_app"
-
-  name_prefix = local.name_prefix
-
-  instance_type = "t2.micro"
-
-  vpc_id            = data.aws_vpc.selected.id
-  public_subnet_ids = data.aws_subnets.public.ids
-
+  source            = "./modules/web_app"
+  name_prefix       = local.name_prefix
+  instance_type     = "t2.micro"
+  vpc_id            = module.aws_vpc.vpc_id
+  public_subnet_ids = module.aws_vpc.public_subnet_ids
 }
 
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "9.12.0"
-
   name    = "${local.name_prefix}-webapp-alb"
-  vpc_id  = data.aws_vpc.selected.id
-  subnets = data.aws_subnets.public.ids
-
+  vpc_id  = module.aws_vpc.vpc_id
+  subnets = module.aws_vpc.public_subnet_ids
   enable_deletion_protection = false
 
   # Security Group
