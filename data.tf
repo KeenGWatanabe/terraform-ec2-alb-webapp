@@ -9,10 +9,6 @@ data "aws_subnets" "public" {
   }
 }
 
-data "aws_subnet" "public" {
-  id = data.aws_subnets.public.ids[0]  # Assuming you want the first subnet in the list
-}
-
 data "aws_subnets" "private" {
   filter {
     name   = "vpc-id"
